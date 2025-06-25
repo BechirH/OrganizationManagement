@@ -170,4 +170,9 @@ public class TeamServiceImpl implements TeamService {
         team.getSurveyIds().remove(surveyId);
         teamRepository.save(team);
     }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return teamRepository.existsById(id);
+    }
 } 

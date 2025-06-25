@@ -13,6 +13,7 @@ import organizationmanagement.service.TeamService;
 import organizationmanagement.util.OrganizationContextUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import organizationmanagement.mapper.TeamMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,12 +34,12 @@ public class TeamController {
 
         if (organizationContextUtil.isRootAdmin()) {
             teams = teamService.getAll().stream()
-                    .map(this::convertToDTO)
+                    .map(TeamMapper::toDTO)
                     .toList();
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             teams = teamService.getAllByOrganization(organizationId).stream()
-                    .map(this::convertToDTO)
+                    .map(TeamMapper::toDTO)
                     .toList();
         }
 
@@ -59,13 +60,13 @@ public class TeamController {
             // Root admin can create teams in any organization
             // The organization context should be derived from the department
             Team saved = teamService.createUnderDepartment(teamDto.getDepartmentId(), teamEntity);
-            createdTeam = convertToDTO(saved);
+            createdTeam = TeamMapper.toDTO(saved);
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             // Verify department belongs to the current organization
             Team saved = teamService.createUnderDepartmentInOrganization(
                     teamDto.getDepartmentId(), teamEntity, organizationId);
-            createdTeam = convertToDTO(saved);
+            createdTeam = TeamMapper.toDTO(saved);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdTeam);
@@ -78,11 +79,11 @@ public class TeamController {
 
         if (organizationContextUtil.isRootAdmin()) {
             Team teamEntity = teamService.getById(id);
-            team = convertToDTO(teamEntity);
+            team = TeamMapper.toDTO(teamEntity);
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             Team teamEntity = teamService.getByIdAndOrganization(id, organizationId);
-            team = convertToDTO(teamEntity);
+            team = TeamMapper.toDTO(teamEntity);
         }
 
         return ResponseEntity.ok(team);
@@ -113,12 +114,12 @@ public class TeamController {
 
         if (organizationContextUtil.isRootAdmin()) {
             Team updated = teamService.update(id, teamDto.getDepartmentId(), updatedTeamEntity);
-            updatedTeam = convertToDTO(updated);
+            updatedTeam = TeamMapper.toDTO(updated);
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             Team updated = teamService.updateInOrganization(
                     id, teamDto.getDepartmentId(), updatedTeamEntity, organizationId);
-            updatedTeam = convertToDTO(updated);
+            updatedTeam = TeamMapper.toDTO(updated);
         }
 
         return ResponseEntity.ok(updatedTeam);
@@ -132,12 +133,12 @@ public class TeamController {
 
         if (organizationContextUtil.isRootAdmin()) {
             teams = teamService.getByDepartmentId(departmentId).stream()
-                    .map(this::convertToDTO)
+                    .map(TeamMapper::toDTO)
                     .toList();
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             teams = teamService.getByDepartmentIdAndOrganization(departmentId, organizationId).stream()
-                    .map(this::convertToDTO)
+                    .map(TeamMapper::toDTO)
                     .toList();
         }
 
@@ -176,22 +177,13 @@ public class TeamController {
         return ResponseEntity.ok("User removed from team successfully");
     }
 
-    // Mapping methods
-
-    private TeamDTO convertToDTO(Team team) {
-        TeamDTO dto = new TeamDTO();
-        dto.setId(team.getId());
-        dto.setName(team.getName());
-
-        Department dept = team.getDepartment();
-        if (dept != null) {
-            DepartmentDTO deptDto = new DepartmentDTO();
-            deptDto.setId(dept.getId());
-            deptDto.setName(dept.getName());
-            dto.setDepartment(deptDto);
-        }
-        return dto;
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Boolean> exists(@PathVariable UUID id) {
+        boolean exists = teamService.existsById(id);
+        return ResponseEntity.ok().body(exists);
     }
+
+    // Mapping methods
 
     private Team convertToEntity(TeamCreateDTO dto) {
         Team team = new Team();

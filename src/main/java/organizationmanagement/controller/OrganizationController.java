@@ -15,6 +15,7 @@ import organizationmanagement.service.TeamService;
 import organizationmanagement.util.OrganizationContextUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import organizationmanagement.mapper.OrganizationMapper;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,8 +37,10 @@ public class OrganizationController {
     // ===== ORGANIZATION ENDPOINTS =====
     @GetMapping
     @PreAuthorize("hasAuthority('SYS_ADMIN_ROOT')")
-    public ResponseEntity<List<Organization>> getAll() {
-        List<Organization> organizations = organizationService.getAll();
+    public ResponseEntity<List<OrganizationDTO>> getAll() {
+        List<OrganizationDTO> organizations = organizationService.getAll().stream()
+                .map(OrganizationMapper::toDTO)
+                .toList();
         return ResponseEntity.ok(organizations);
     }
 
@@ -55,7 +58,7 @@ public class OrganizationController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ORGANIZATION_READ', 'SYS_ADMIN_ROOT')")
-    public ResponseEntity<Organization> getById(@PathVariable UUID id) {
+    public ResponseEntity<OrganizationDTO> getById(@PathVariable UUID id) {
         Organization organization;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -68,12 +71,12 @@ public class OrganizationController {
             organization = organizationService.getById(id);
         }
 
-        return ResponseEntity.ok(organization);
+        return ResponseEntity.ok(OrganizationMapper.toDTO(organization));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ORGANIZATION_UPDATE', 'SYS_ADMIN_ROOT')")
-    public ResponseEntity<Organization> update(@PathVariable UUID id, @RequestBody Organization organization) {
+    public ResponseEntity<OrganizationDTO> update(@PathVariable UUID id, @RequestBody Organization organization) {
         Organization updatedOrganization;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -86,7 +89,7 @@ public class OrganizationController {
             updatedOrganization = organizationService.update(id, organization);
         }
 
-        return ResponseEntity.ok(updatedOrganization);
+        return ResponseEntity.ok(OrganizationMapper.toDTO(updatedOrganization));
     }
 
     @DeleteMapping("/{id}")
@@ -254,7 +257,7 @@ public class OrganizationController {
         }
 
         Organization org = organizationService.getById(id);
-        OrganizationDTO orgDTO = toOrganizationDTO(org);
+        OrganizationDTO orgDTO = OrganizationMapper.toDTO(org);
 
         List<DepartmentDTO> departments = departmentService.getByOrganizationId(id).stream()
                 .map(dept -> {
@@ -292,13 +295,6 @@ public class OrganizationController {
                 throw new IllegalArgumentException("Access denied: You can only manage resources in your own organization");
             }
         }
-    }
-
-    private OrganizationDTO toOrganizationDTO(Organization org) {
-        OrganizationDTO dto = new OrganizationDTO();
-        dto.setId(org.getId());
-        dto.setName(org.getName());
-        return dto;
     }
 
     // ===== RESPONSE CLASSES =====

@@ -9,6 +9,7 @@ import organizationmanagement.model.Organization;
 import organizationmanagement.service.DepartmentService;
 import organizationmanagement.service.OrganizationService;
 import organizationmanagement.util.OrganizationContextUtil;
+import organizationmanagement.mapper.DepartmentMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,12 +36,12 @@ public class DepartmentController {
 
         if (organizationContextUtil.isRootAdmin()) {
             departments = service.getAll().stream()
-                    .map(this::convertToDTO)
+                    .map(DepartmentMapper::toDTO)
                     .collect(Collectors.toList());
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             departments = service.getAllByOrganization(organizationId).stream()
-                    .map(this::convertToDTO)
+                    .map(DepartmentMapper::toDTO)
                     .collect(Collectors.toList());
         }
 
@@ -56,15 +57,16 @@ public class DepartmentController {
             if (deptDto.getOrganizationId() == null) {
                 throw new BadRequestException("Organization ID is required for sys admin department creation");
             }
-            Department deptEntity = convertToEntity(deptDto);
+            Organization org = organizationService.getById(deptDto.getOrganizationId());
+            Department deptEntity = DepartmentMapper.toEntity(deptDto, org);
             Department saved = service.createUnderOrganization(deptDto.getOrganizationId(), deptEntity);
-            createdDepartment = convertToDTO(saved);
+            createdDepartment = DepartmentMapper.toDTO(saved);
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
-            deptDto.setOrganizationId(organizationId);
-            Department deptEntity = convertToEntity(deptDto);
+            Organization org = organizationService.getById(organizationId);
+            Department deptEntity = DepartmentMapper.toEntity(deptDto, org);
             Department saved = service.createUnderOrganization(organizationId, deptEntity);
-            createdDepartment = convertToDTO(saved);
+            createdDepartment = DepartmentMapper.toDTO(saved);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdDepartment);
@@ -80,14 +82,14 @@ public class DepartmentController {
             if (dept == null) {
                 throw new BadRequestException("Department not found with ID: " + id);
             }
-            department = convertToDTO(dept);
+            department = DepartmentMapper.toDTO(dept);
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             Department dept = service.getByIdAndOrganization(id, organizationId);
             if (dept == null) {
                 throw new BadRequestException("Department not found with ID: " + id);
             }
-            department = convertToDTO(dept);
+            department = DepartmentMapper.toDTO(dept);
         }
 
         return ResponseEntity.ok(department);
@@ -116,7 +118,7 @@ public class DepartmentController {
             existing.setOrganization(org);
 
             Department updated = service.update(existing);
-            updatedDepartment = convertToDTO(updated);
+            updatedDepartment = DepartmentMapper.toDTO(updated);
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
             Department existing = service.getByIdAndOrganization(id, organizationId);
@@ -127,7 +129,7 @@ public class DepartmentController {
             existing.setName(deptDto.getName());
             // Keep the same organization for non-root users
             Department updated = service.update(existing);
-            updatedDepartment = convertToDTO(updated);
+            updatedDepartment = DepartmentMapper.toDTO(updated);
         }
 
         return ResponseEntity.ok(updatedDepartment);
@@ -182,32 +184,5 @@ public class DepartmentController {
             service.removeUserFromDepartmentInOrganization(departmentId, userId, organizationId);
         }
         return ResponseEntity.ok("User removed from department successfully");
-    }
-
-    // Mapping methods
-
-    private DepartmentDTO convertToDTO(Department dept) {
-        DepartmentDTO dto = new DepartmentDTO();
-        dto.setId(dept.getId());
-        dto.setName(dept.getName());
-
-        Organization org = dept.getOrganization();
-        if (org != null) {
-            OrganizationDTO orgDto = new OrganizationDTO();
-            orgDto.setId(org.getId());
-            orgDto.setName(org.getName());
-            dto.setOrganization(orgDto);
-        }
-        return dto;
-    }
-
-    private Department convertToEntity(DepartmentCreateDTO dto) {
-        Department dept = new Department();
-        dept.setName(dto.getName());
-        if (dto.getOrganizationId() != null) {
-            Organization org = organizationService.getById(dto.getOrganizationId());
-            dept.setOrganization(org);
-        }
-        return dept;
     }
 }

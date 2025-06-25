@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/organizations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/exists").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/departments/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/teams/*/exists").permitAll()
                         .anyRequest().authenticated()
                 )
 
