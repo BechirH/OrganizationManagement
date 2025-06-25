@@ -59,7 +59,17 @@ public class DepartmentServiceImpl implements DepartmentService {
     private void validateDepartmentName(String name) { if (name == null || name.trim().isEmpty()) { throw new BadRequestException("Department name must not be empty."); } String trimmed = name.trim(); if (trimmed.length() < 2 || trimmed.length() > 100) { throw new BadRequestException("Department name must be between 2 and 100 characters."); } }
 
     @Override
-    public void assignUserToDepartmentInOrganization(UUID departmentId, UUID userId, UUID organizationId) { Department department = departmentRepository.findByIdAndOrganizationId(departmentId, organizationId).orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + departmentId + " in organization " + organizationId)); ResponseEntity<Boolean> userExistsResponse = userServiceClient.userExists(userId); if (userExistsResponse.getBody() == null || !userExistsResponse.getBody()) { throw new ResourceNotFoundException("User not found with id: " + userId); } if (department.getUserIds().contains(userId)) { throw new BadRequestException("User is already assigned to this department"); } department.getUserIds().add(userId); departmentRepository.save(department); }
+    public void assignUserToDepartmentInOrganization(UUID departmentId, UUID userId, UUID organizationId)
+    { Department department = departmentRepository.findByIdAndOrganizationId(departmentId, organizationId).orElseThrow(()
+            -> new ResourceNotFoundException("Department not found with id " + departmentId + " in organization " + organizationId));
+        ResponseEntity<Boolean> userExistsResponse = userServiceClient.userExists(userId);
+        if (userExistsResponse.getBody() == null || !userExistsResponse.getBody())
+        { throw new ResourceNotFoundException("User not found with id: " + userId); }
+        if (department.getUserIds().contains(userId))
+        { throw new BadRequestException("User is already assigned to this department"); }
+        department.getUserIds().add(userId); departmentRepository.save(department);
+    }
+
 
     @Override
     public void removeUserFromDepartmentInOrganization(UUID departmentId, UUID userId, UUID organizationId) { Department department = departmentRepository.findByIdAndOrganizationId(departmentId, organizationId).orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + departmentId + " in organization " + organizationId)); if (!department.getUserIds().contains(userId)) { throw new BadRequestException("User is not assigned to this department"); } department.getUserIds().remove(userId); departmentRepository.save(department); }
@@ -73,4 +83,12 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public DepartmentRepository getDepartmentRepository() { return departmentRepository; }
+
+    @Override
+    public Department findByUserId(UUID userId) {
+        return departmentRepository.findAll().stream()
+            .filter(dept -> dept.getUserIds() != null && dept.getUserIds().contains(userId))
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException("Department not found for userId: " + userId));
+    }
 } 

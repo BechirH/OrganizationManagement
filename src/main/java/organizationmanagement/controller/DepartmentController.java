@@ -4,6 +4,7 @@ import organizationmanagement.dto.DepartmentCreateDTO;
 import organizationmanagement.dto.DepartmentDTO;
 import organizationmanagement.dto.OrganizationDTO;
 import organizationmanagement.exception.BadRequestException;
+import organizationmanagement.exception.ResourceNotFoundException;
 import organizationmanagement.model.Department;
 import organizationmanagement.model.Organization;
 import organizationmanagement.service.DepartmentService;
@@ -184,5 +185,18 @@ public class DepartmentController {
             service.removeUserFromDepartmentInOrganization(departmentId, userId, organizationId);
         }
         return ResponseEntity.ok("User removed from department successfully");
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<DepartmentDTO> getDepartmentByUserId(@PathVariable UUID userId) {
+        try {
+            Department department = service.findByUserId(userId);
+            DepartmentDTO dto = new DepartmentDTO();
+            dto.setDepartmentId(department.getId());
+            dto.setDepartmentName(department.getName());
+            return ResponseEntity.ok(dto);
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 }

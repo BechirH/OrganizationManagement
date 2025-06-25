@@ -22,4 +22,5 @@ public interface TeamService {
     void assignSurveyToTeamInOrganization(UUID teamId, UUID surveyId, UUID organizationId);
     void removeSurveyFromTeamInOrganization(UUID teamId, UUID surveyId, UUID organizationId);
     boolean existsById(UUID id);
+    Team findByUserId(UUID userId);
 }

@@ -175,4 +175,12 @@ public class TeamServiceImpl implements TeamService {
     public boolean existsById(UUID id) {
         return teamRepository.existsById(id);
     }
+
+    @Override
+    public Team findByUserId(UUID userId) {
+        return teamRepository.findAll().stream()
+            .filter(team -> team.getUserIds() != null && team.getUserIds().contains(userId))
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException("Team not found for userId: " + userId));
+    }
 } 

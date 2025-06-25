@@ -20,4 +20,5 @@ public interface DepartmentService {
     void assignSurveyToDepartmentInOrganization(UUID departmentId, UUID surveyId, UUID organizationId);
     void removeSurveyFromDepartmentInOrganization(UUID departmentId, UUID surveyId, UUID organizationId);
     DepartmentRepository getDepartmentRepository();
+    Department findByUserId(UUID userId);
 }

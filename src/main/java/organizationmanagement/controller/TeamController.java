@@ -14,6 +14,7 @@ import organizationmanagement.util.OrganizationContextUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import organizationmanagement.mapper.TeamMapper;
+import organizationmanagement.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.UUID;
@@ -181,6 +182,19 @@ public class TeamController {
     public ResponseEntity<Boolean> exists(@PathVariable UUID id) {
         boolean exists = teamService.existsById(id);
         return ResponseEntity.ok().body(exists);
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<TeamDTO> getTeamByUserId(@PathVariable UUID userId) {
+        try {
+            Team team = teamService.findByUserId(userId);
+            TeamDTO dto = new TeamDTO();
+            dto.setTeamId(team.getId());
+            dto.setTeamName(team.getName());
+            return ResponseEntity.ok(dto);
+        } catch (ResourceNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
     }
 
     // Mapping methods
