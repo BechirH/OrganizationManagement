@@ -10,7 +10,7 @@ import organizationmanagement.model.Department;
 import organizationmanagement.model.Team;
 import organizationmanagement.service.DepartmentService;
 import organizationmanagement.service.TeamService;
-import organizationmanagement.utils.OrganizationContextUtil;
+import organizationmanagement.util.OrganizationContextUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -142,6 +142,38 @@ public class TeamController {
         }
 
         return ResponseEntity.ok(teams);
+    }
+
+    @PostMapping("/{teamId}/assign-user/{userId}")
+    @PreAuthorize("hasAnyAuthority('TEAM_UPDATE','SYS_ADMIN_ROOT')")
+    public ResponseEntity<String> assignUserToTeam(@PathVariable UUID teamId, @PathVariable UUID userId) {
+        if (organizationContextUtil.isRootAdmin()) {
+            Team team = teamService.getById(teamId);
+            if (team == null) {
+                throw new IllegalArgumentException("Team not found with ID: " + teamId);
+            }
+            teamService.assignUserToTeamInOrganization(teamId, userId, team.getDepartment().getOrganization().getId());
+        } else {
+            UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
+            teamService.assignUserToTeamInOrganization(teamId, userId, organizationId);
+        }
+        return ResponseEntity.ok("User assigned to team successfully");
+    }
+
+    @PostMapping("/{teamId}/remove-user/{userId}")
+    @PreAuthorize("hasAnyAuthority('TEAM_UPDATE','SYS_ADMIN_ROOT')")
+    public ResponseEntity<String> removeUserFromTeam(@PathVariable UUID teamId, @PathVariable UUID userId) {
+        if (organizationContextUtil.isRootAdmin()) {
+            Team team = teamService.getById(teamId);
+            if (team == null) {
+                throw new IllegalArgumentException("Team not found with ID: " + teamId);
+            }
+            teamService.removeUserFromTeamInOrganization(teamId, userId, team.getDepartment().getOrganization().getId());
+        } else {
+            UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
+            teamService.removeUserFromTeamInOrganization(teamId, userId, organizationId);
+        }
+        return ResponseEntity.ok("User removed from team successfully");
     }
 
     // Mapping methods

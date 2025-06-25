@@ -1,4 +1,4 @@
-package organizationmanagement.utils;
+package organizationmanagement.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;

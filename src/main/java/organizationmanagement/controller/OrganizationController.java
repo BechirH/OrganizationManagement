@@ -12,7 +12,7 @@ import organizationmanagement.model.Organization;
 import organizationmanagement.service.DepartmentService;
 import organizationmanagement.service.OrganizationService;
 import organizationmanagement.service.TeamService;
-import organizationmanagement.utils.OrganizationContextUtil;
+import organizationmanagement.util.OrganizationContextUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 

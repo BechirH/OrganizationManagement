@@ -8,7 +8,7 @@ import organizationmanagement.model.Department;
 import organizationmanagement.model.Organization;
 import organizationmanagement.service.DepartmentService;
 import organizationmanagement.service.OrganizationService;
-import organizationmanagement.utils.OrganizationContextUtil;
+import organizationmanagement.util.OrganizationContextUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -150,6 +150,38 @@ public class DepartmentController {
     public ResponseEntity<Boolean> exists(@PathVariable UUID id) {
         boolean exists = service.getDepartmentRepository().existsById(id);
         return ResponseEntity.ok().body(exists);
+    }
+
+    @PostMapping("/{departmentId}/assign-user/{userId}")
+    @PreAuthorize("hasAnyAuthority('DEPARTMENT_UPDATE','SYS_ADMIN_ROOT')")
+    public ResponseEntity<String> assignUserToDepartment(@PathVariable UUID departmentId, @PathVariable UUID userId) {
+        if (organizationContextUtil.isRootAdmin()) {
+            Department department = service.getById(departmentId);
+            if (department == null) {
+                throw new BadRequestException("Department not found with ID: " + departmentId);
+            }
+            service.assignUserToDepartmentInOrganization(departmentId, userId, department.getOrganization().getId());
+        } else {
+            UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
+            service.assignUserToDepartmentInOrganization(departmentId, userId, organizationId);
+        }
+        return ResponseEntity.ok("User assigned to department successfully");
+    }
+
+    @PostMapping("/{departmentId}/remove-user/{userId}")
+    @PreAuthorize("hasAnyAuthority('DEPARTMENT_UPDATE','SYS_ADMIN_ROOT')")
+    public ResponseEntity<String> removeUserFromDepartment(@PathVariable UUID departmentId, @PathVariable UUID userId) {
+        if (organizationContextUtil.isRootAdmin()) {
+            Department department = service.getById(departmentId);
+            if (department == null) {
+                throw new BadRequestException("Department not found with ID: " + departmentId);
+            }
+            service.removeUserFromDepartmentInOrganization(departmentId, userId, department.getOrganization().getId());
+        } else {
+            UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
+            service.removeUserFromDepartmentInOrganization(departmentId, userId, organizationId);
+        }
+        return ResponseEntity.ok("User removed from department successfully");
     }
 
     // Mapping methods
