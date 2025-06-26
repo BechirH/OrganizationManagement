@@ -12,6 +12,7 @@ import organizationmanagement.service.OrganizationService;
 import organizationmanagement.util.OrganizationContextUtil;
 import organizationmanagement.mapper.DepartmentMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/departments")
 @RequiredArgsConstructor
+@Slf4j
 public class DepartmentController {
 
     private final DepartmentService service;
@@ -33,6 +35,7 @@ public class DepartmentController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('DEPARTMENT_READ','SYS_ADMIN_ROOT')")
     public ResponseEntity<List<DepartmentDTO>> getAll() {
+        log.info("Getting all departments");
         List<DepartmentDTO> departments;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -52,6 +55,7 @@ public class DepartmentController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('DEPARTMENT_CREATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<DepartmentDTO> create(@RequestBody DepartmentCreateDTO deptDto) {
+        log.info("Creating new department: {}", deptDto.getName());
         DepartmentDTO createdDepartment;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -76,6 +80,7 @@ public class DepartmentController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('DEPARTMENT_READ','SYS_ADMIN_ROOT')")
     public ResponseEntity<DepartmentDTO> getById(@PathVariable UUID id) {
+        log.info("Getting department by id: {}", id);
         DepartmentDTO department;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -99,6 +104,7 @@ public class DepartmentController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('DEPARTMENT_UPDATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<DepartmentDTO> update(@PathVariable UUID id, @RequestBody DepartmentCreateDTO deptDto) {
+        log.info("Updating department: {}", id);
         DepartmentDTO updatedDepartment;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -139,6 +145,7 @@ public class DepartmentController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('DEPARTMENT_DELETE','SYS_ADMIN_ROOT')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        log.info("Deleting department: {}", id);
         if (organizationContextUtil.isRootAdmin()) {
             service.delete(id);
         } else {
@@ -151,6 +158,7 @@ public class DepartmentController {
 
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> exists(@PathVariable UUID id) {
+        log.info("Checking if department exists: {}", id);
         boolean exists = service.getDepartmentRepository().existsById(id);
         return ResponseEntity.ok().body(exists);
     }
@@ -158,6 +166,7 @@ public class DepartmentController {
     @PostMapping("/{departmentId}/assign-user/{userId}")
     @PreAuthorize("hasAnyAuthority('DEPARTMENT_UPDATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<String> assignUserToDepartment(@PathVariable UUID departmentId, @PathVariable UUID userId) {
+        log.info("Assigning user {} to department {}", userId, departmentId);
         if (organizationContextUtil.isRootAdmin()) {
             Department department = service.getById(departmentId);
             if (department == null) {
@@ -174,6 +183,7 @@ public class DepartmentController {
     @PostMapping("/{departmentId}/remove-user/{userId}")
     @PreAuthorize("hasAnyAuthority('DEPARTMENT_UPDATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<String> removeUserFromDepartment(@PathVariable UUID departmentId, @PathVariable UUID userId) {
+        log.info("Removing user {} from department {}", userId, departmentId);
         if (organizationContextUtil.isRootAdmin()) {
             Department department = service.getById(departmentId);
             if (department == null) {
@@ -189,11 +199,10 @@ public class DepartmentController {
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<DepartmentDTO> getDepartmentByUserId(@PathVariable UUID userId) {
+        log.info("Getting department for user: {}", userId);
         try {
             Department department = service.findByUserId(userId);
-            DepartmentDTO dto = new DepartmentDTO();
-            dto.setDepartmentId(department.getId());
-            dto.setDepartmentName(department.getName());
+            DepartmentDTO dto = DepartmentMapper.toDTO(department);
             return ResponseEntity.ok(dto);
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

@@ -12,6 +12,7 @@ import organizationmanagement.service.DepartmentService;
 import organizationmanagement.service.TeamService;
 import organizationmanagement.util.OrganizationContextUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import organizationmanagement.mapper.TeamMapper;
 import organizationmanagement.exception.ResourceNotFoundException;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/teams")
 @RequiredArgsConstructor
+@Slf4j
 public class TeamController {
 
     private final TeamService teamService;
@@ -31,6 +33,7 @@ public class TeamController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('TEAM_READ','SYS_ADMIN_ROOT')")
     public ResponseEntity<List<TeamDTO>> getAll() {
+        log.info("Getting all teams");
         List<TeamDTO> teams;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -50,6 +53,7 @@ public class TeamController {
     @PostMapping
     @PreAuthorize("hasAnyAuthority('TEAM_CREATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<TeamDTO> create(@RequestBody TeamCreateDTO teamDto) {
+        log.info("Creating new team: {}", teamDto.getName());
         if (teamDto.getDepartmentId() == null) {
             throw new IllegalArgumentException("Department ID must be provided to create a team.");
         }
@@ -76,6 +80,7 @@ public class TeamController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('TEAM_READ','SYS_ADMIN_ROOT')")
     public ResponseEntity<TeamDTO> getById(@PathVariable UUID id) {
+        log.info("Getting team by id: {}", id);
         TeamDTO team;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -93,6 +98,7 @@ public class TeamController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('TEAM_DELETE','SYS_ADMIN_ROOT')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        log.info("Deleting team: {}", id);
         if (organizationContextUtil.isRootAdmin()) {
             teamService.delete(id);
         } else {
@@ -106,6 +112,7 @@ public class TeamController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('TEAM_UPDATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<TeamDTO> update(@PathVariable UUID id, @RequestBody TeamCreateDTO teamDto) {
+        log.info("Updating team: {}", id);
         if (teamDto.getDepartmentId() == null) {
             throw new IllegalArgumentException("Department ID must be provided to update a team.");
         }
@@ -130,6 +137,7 @@ public class TeamController {
     @GetMapping("/department/{departmentId}")
     @PreAuthorize("hasAnyAuthority('TEAM_READ','SYS_ADMIN_ROOT')")
     public ResponseEntity<List<TeamDTO>> getTeamsByDepartment(@PathVariable UUID departmentId) {
+        log.info("Getting teams by department: {}", departmentId);
         List<TeamDTO> teams;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -149,6 +157,7 @@ public class TeamController {
     @PostMapping("/{teamId}/assign-user/{userId}")
     @PreAuthorize("hasAnyAuthority('TEAM_UPDATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<String> assignUserToTeam(@PathVariable UUID teamId, @PathVariable UUID userId) {
+        log.info("Assigning user {} to team {}", userId, teamId);
         if (organizationContextUtil.isRootAdmin()) {
             Team team = teamService.getById(teamId);
             if (team == null) {
@@ -165,6 +174,7 @@ public class TeamController {
     @PostMapping("/{teamId}/remove-user/{userId}")
     @PreAuthorize("hasAnyAuthority('TEAM_UPDATE','SYS_ADMIN_ROOT')")
     public ResponseEntity<String> removeUserFromTeam(@PathVariable UUID teamId, @PathVariable UUID userId) {
+        log.info("Removing user {} from team {}", userId, teamId);
         if (organizationContextUtil.isRootAdmin()) {
             Team team = teamService.getById(teamId);
             if (team == null) {
@@ -180,12 +190,14 @@ public class TeamController {
 
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> exists(@PathVariable UUID id) {
+        log.info("Checking if team exists: {}", id);
         boolean exists = teamService.existsById(id);
         return ResponseEntity.ok().body(exists);
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<TeamDTO> getTeamByUserId(@PathVariable UUID userId) {
+        log.info("Getting team for user: {}", userId);
         try {
             Team team = teamService.findByUserId(userId);
             TeamDTO dto = new TeamDTO();

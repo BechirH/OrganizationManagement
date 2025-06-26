@@ -8,6 +8,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.util.AntPathMatcher;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 import organizationmanagement.config.JwtTokenUtil;
 
 @Component
+@Slf4j
 public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtTokenUtil jwtTokenUtil;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
@@ -45,6 +47,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Skip JWT validation for public endpoints
         if (isPublicEndpoint(request)) {
+            log.debug("Skipping JWT validation for public endpoint: {}", request.getRequestURI());
             filterChain.doFilter(request, response);
             return;
         }
@@ -52,20 +55,25 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            log.warn("Missing or invalid Authorization header for request: {}", request.getRequestURI());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
             return;
         }
 
         try {
             final String token = authorizationHeader.substring(7);
+            log.debug("Validating JWT token for request: {}", request.getRequestURI());
 
             if (!jwtTokenUtil.isTokenValid(token)) {
+                log.warn("Invalid or expired JWT token for request: {}", request.getRequestURI());
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
                 return;
             }
 
             final String username = jwtTokenUtil.extractUsername(token);
             final UUID organizationId = jwtTokenUtil.extractOrganizationId(token);
+
+            log.debug("JWT token validated successfully for user: {} in organization: {}", username, organizationId);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 List<String> authorities = jwtTokenUtil.extractAuthorities(token);
@@ -88,8 +96,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 request.setAttribute("username", username);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("Authentication context set for user: {} with authorities: {}", username, authorities);
             }
         } catch (Exception e) {
+            log.error("JWT token validation failed for request: {} - Error: {}", request.getRequestURI(), e.getMessage());
             SecurityContextHolder.clearContext();
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token: " + e.getMessage());
             return;
