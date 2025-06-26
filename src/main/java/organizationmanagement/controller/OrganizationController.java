@@ -1,7 +1,6 @@
 package organizationmanagement.controller;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import organizationmanagement.dto.DepartmentDTO;
@@ -26,7 +25,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/organizations")
 @RequiredArgsConstructor
-@Slf4j
 public class OrganizationController {
 
     private final OrganizationService organizationService;
@@ -38,7 +36,6 @@ public class OrganizationController {
     @GetMapping
     @PreAuthorize("hasAuthority('SYS_ADMIN_ROOT')")
     public ResponseEntity<List<OrganizationDTO>> getAll() {
-        log.info("Getting all organizations");
         List<OrganizationDTO> organizations = organizationService.getAll().stream()
                 .map(OrganizationMapper::toDTO)
                 .toList();
@@ -48,13 +45,11 @@ public class OrganizationController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Organization create(@RequestBody Organization organization) {
-        log.info("Creating new organization: {}", organization.getName());
         return organizationService.create(organization);
     }
 
     @GetMapping("/{id}/exists")
     public ResponseEntity< Boolean> exists(@PathVariable UUID id) {
-        log.info("Checking if organization exists: {}", id);
         boolean exists = organizationService.exists(id);
         return ResponseEntity.ok(exists);
     }
@@ -62,7 +57,6 @@ public class OrganizationController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ORGANIZATION_READ', 'SYS_ADMIN_ROOT')")
     public ResponseEntity<OrganizationDTO> getById(@PathVariable UUID id) {
-        log.info("Getting organization by id: {}", id);
         Organization organization;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -81,7 +75,6 @@ public class OrganizationController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ORGANIZATION_UPDATE', 'SYS_ADMIN_ROOT')")
     public ResponseEntity<OrganizationDTO> update(@PathVariable UUID id, @RequestBody Organization organization) {
-        log.info("Updating organization: {}", id);
         Organization updatedOrganization;
 
         if (organizationContextUtil.isRootAdmin()) {
@@ -100,7 +93,6 @@ public class OrganizationController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ORGANIZATION_DELETE', 'SYS_ADMIN_ROOT')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        log.info("Deleting organization: {}", id);
         if (organizationContextUtil.isRootAdmin()) {
             organizationService.delete(id);
         } else {

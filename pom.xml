@@ -13,8 +13,6 @@
 		<relativePath/>
 	</parent>
 
-
-
 	<groupId>com.example</groupId>
 	<artifactId>organizationmanagement</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
@@ -64,7 +62,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
-
 		</dependency>
 
 		<dependency>
@@ -118,7 +115,6 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
-
 		</dependency>
 		<!-- Lombok-MapStruct Binding -->
 		<dependency>

@@ -2,7 +2,6 @@ package organizationmanagement.service.impl;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import organizationmanagement.client.SurveyServiceClient;
 import organizationmanagement.client.UserServiceClient;
 import organizationmanagement.exception.BadRequestException;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
@@ -149,49 +147,30 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional
     public void assignSurveyToDepartmentInOrganization(UUID departmentId, UUID surveyId, UUID organizationId) {
         try {
-            log.debug("Attempting to assign survey {} to department {} in organization {}", 
-                    surveyId, departmentId, organizationId);
-            
             Department department = departmentRepository.findByIdAndOrganizationId(departmentId, organizationId)
-                    .orElseThrow(() -> {
-                        log.error("Department not found: {} in organization {}", departmentId, organizationId);
-                        return new ResourceNotFoundException(
-                                "Department not found with id " + departmentId + " in organization " + organizationId);
-                    });
-            
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Department not found with id " + departmentId + " in organization " + organizationId));
             try {
                 ResponseEntity<Boolean> surveyExistsResponse = surveyServiceClient.surveyExists(surveyId);
-                
                 if (!surveyExistsResponse.getStatusCode().is2xxSuccessful()) {
-                    log.error("Survey service returned status: {}", surveyExistsResponse.getStatusCode());
                     throw new ResourceNotFoundException("Survey service unavailable or survey not found");
                 }
-                
                 if (surveyExistsResponse.getBody() == null || !surveyExistsResponse.getBody()) {
-                    log.warn("Survey not found: {}", surveyId);
                     throw new ResourceNotFoundException("Survey not found with id: " + surveyId);
                 }
             } catch (FeignException.NotFound e) {
-                log.warn("Survey not found (Feign 404): {}", surveyId);
                 throw new ResourceNotFoundException("Survey not found with id: " + surveyId);
             } catch (FeignException e) {
-                log.error("Feign communication error: {}", e.getMessage());
                 throw new ServiceUnavailableException("Survey service unavailable: " + e.getMessage());
             }
-            
             if (department.getSurveyIds().contains(surveyId)) {
-                log.warn("Survey already assigned: {} to department {}", surveyId, departmentId);
                 throw new BadRequestException("Survey is already assigned to this department");
             }
-            
             department.getSurveyIds().add(surveyId);
             departmentRepository.save(department);
-            log.info("Survey {} successfully assigned to department {}", surveyId, departmentId);
-            
         } catch (ResourceNotFoundException | BadRequestException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Unexpected error assigning survey: {}", e.getMessage(), e);
             throw new ServiceUnavailableException("Failed to assign survey: " + e.getMessage());
         }
     }
