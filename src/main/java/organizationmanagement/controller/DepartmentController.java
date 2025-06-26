@@ -188,11 +188,10 @@ public class DepartmentController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<DepartmentDTO> getDepartmentByUserId(@PathVariable UUID userId) {
+    public ResponseEntity<UUID> getDepartmentIdByUserId(@PathVariable UUID userId) {
         try {
             Department department = service.findByUserId(userId);
-            DepartmentDTO dto = DepartmentMapper.toDTO(department);
-            return ResponseEntity.ok(dto);
+            return ResponseEntity.ok(department.getId());
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }

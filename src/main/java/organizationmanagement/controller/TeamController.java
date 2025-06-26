@@ -185,13 +185,10 @@ public class TeamController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<TeamDTO> getTeamByUserId(@PathVariable UUID userId) {
+    public ResponseEntity<UUID> getTeamIdByUserId(@PathVariable UUID userId) {
         try {
             Team team = teamService.findByUserId(userId);
-            TeamDTO dto = new TeamDTO();
-            dto.setTeamId(team.getId());
-            dto.setTeamName(team.getName());
-            return ResponseEntity.ok(dto);
+            return ResponseEntity.ok(team.getId());
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
