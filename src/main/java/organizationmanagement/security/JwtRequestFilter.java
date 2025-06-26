@@ -30,7 +30,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/api/organizations", // for POST requests
-            "/api/organizations/*/exists" // for GET requests
+            "/api/organizations/*/exists", // for GET requests
+            "/api/departments/*/exists", // for GET requests
+            "/api/teams/*/exists", // for GET requests
+            "/api/departments/user/**", // for GET requests - THIS WAS MISSING
+            "/api/teams/user/**" // for GET requests - THIS WAS MISSING
     };
 
     public JwtRequestFilter(JwtTokenUtil jwtTokenUtil) {
@@ -102,15 +106,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String requestPath = request.getRequestURI();
         String method = request.getMethod();
 
-
         for (String pattern : PUBLIC_ENDPOINTS) {
             if (pathMatcher.match(pattern, requestPath)) {
                 // For /api/organizations, only allow POST requests
                 if (pattern.equals("/api/organizations") && !"POST".equals(method)) {
                     continue;
                 }
-                // For /api/organizations/*/exists, only allow GET requests
-                if (pattern.equals("/api/organizations/*/exists") && !"GET".equals(method)) {
+                // For exists endpoints, only allow GET requests
+                if ((pattern.equals("/api/organizations/*/exists") ||
+                        pattern.equals("/api/departments/*/exists") ||
+                        pattern.equals("/api/teams/*/exists")) && !"GET".equals(method)) {
+                    continue;
+                }
+                // For user endpoints, only allow GET requests
+                if ((pattern.equals("/api/departments/user/**") ||
+                        pattern.equals("/api/teams/user/**")) && !"GET".equals(method)) {
                     continue;
                 }
                 return true;
