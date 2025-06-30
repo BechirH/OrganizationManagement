@@ -33,4 +33,9 @@ public class Team {
     @CollectionTable(name = "team_surveys", joinColumns = @JoinColumn(name = "team_id"))
     @Column(name = "survey_id")
     private Set<UUID> surveyIds = new HashSet<>();
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public Department getDepartment() { return department; }
+    public void setDepartment(Department department) { this.department = department; }
 }

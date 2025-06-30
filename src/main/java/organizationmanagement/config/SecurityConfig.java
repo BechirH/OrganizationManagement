@@ -1,4 +1,4 @@
-package organizationmanagement.security;
+package organizationmanagement.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import organizationmanagement.security.JwtRequestFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -58,6 +59,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/organizations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/exists").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/departments/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/teams/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/departments/user/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/teams/user/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
