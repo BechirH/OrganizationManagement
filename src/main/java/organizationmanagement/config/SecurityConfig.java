@@ -13,7 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.configurers.SecurityContextConfigurer;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -49,8 +49,11 @@ public class SecurityConfig {
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
 
         http
-                // Disable CSRF for stateless JWT authentication
-                .csrf(AbstractHttpConfigurer::disable)
+                // Enable CSRF for cookie-based authentication
+                .csrf(csrf -> csrf
+                    .ignoringRequestMatchers(PUBLIC_ENDPOINTS) // Allow public endpoints without CSRF
+                    .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
+                )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // Configure authorization
@@ -114,10 +117,12 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*");
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
+        // TODO: Restrict allowed origins for production
+        configuration.setAllowedOriginPatterns(java.util.List.of("http://localhost:3000")); // Example: allow only frontend dev server
+        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
         configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(java.util.Arrays.asList("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
