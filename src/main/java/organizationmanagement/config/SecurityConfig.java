@@ -39,6 +39,20 @@ public class SecurityConfig {
             "/swagger-ui.html"
     };
 
+    // Endpoints that should be ignored by CSRF protection
+    private static final String[] CSRF_IGNORED_ENDPOINTS = {
+            "/actuator/health",
+            "/v3/api-docs/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/api/organizations", // POST
+            "/api/organizations/*/exists", // GET
+            "/api/departments/*/exists", // GET
+            "/api/teams/*/exists", // GET
+            "/api/departments/user/**", // GET
+            "/api/teams/user/**" // GET
+    };
+
     public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
         this.jwtRequestFilter = jwtRequestFilter;
     }
@@ -51,7 +65,7 @@ public class SecurityConfig {
         http
                 // Enable CSRF for cookie-based authentication
                 .csrf(csrf -> csrf
-                    .ignoringRequestMatchers(PUBLIC_ENDPOINTS) // Allow public endpoints without CSRF
+                    .ignoringRequestMatchers(CSRF_IGNORED_ENDPOINTS) // Allow public and whitelisted endpoints without CSRF
                     .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
