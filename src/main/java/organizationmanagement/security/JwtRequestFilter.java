@@ -10,6 +10,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.util.AntPathMatcher;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -53,16 +54,28 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             return;
         }
 
+        String token = null;
         final String authorizationHeader = request.getHeader("Authorization");
+        
+        // First try to get token from Authorization header (for backward compatibility)
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        } else if (request.getCookies() != null) {
+            // Extract token from cookies
+            for (Cookie cookie : request.getCookies()) {
+                if ("access_token".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
+        }
 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
+        if (token == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid authentication token");
             return;
         }
 
         try {
-            final String token = authorizationHeader.substring(7);
-
             if (!jwtTokenUtil.isTokenValid(token)) {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
                 return;
