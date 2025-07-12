@@ -9,7 +9,8 @@ import java.util.UUID;
 
 @FeignClient(
         name = "survey-service",
-        url = "${survey-service.url}"
+        url = "${survey-service.url}",
+        configuration = organizationmanagement.config.FeignConfig.class
 )
 public interface SurveyServiceClient {
     @GetMapping("/{surveyId}/exists")

@@ -42,7 +42,7 @@ public class OrganizationController {
         return ResponseEntity.ok(organizations);
     }
 
-    @PostMapping
+    @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public Organization create(@RequestBody Organization organization) {
         return organizationService.create(organization);
