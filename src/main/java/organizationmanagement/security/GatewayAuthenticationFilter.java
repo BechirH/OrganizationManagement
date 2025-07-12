@@ -27,7 +27,7 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/api/organizations", // for POST requests
+            "/api/organizations/register", // for POST requests
             "/api/organizations/*/exists", // for GET requests
             "/api/departments/*/exists", // for GET requests
             "/api/teams/*/exists", // for GET requests
@@ -113,8 +113,8 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
 
         for (String pattern : PUBLIC_ENDPOINTS) {
             if (pathMatcher.match(pattern, requestPath)) {
-                // For /api/organizations, only allow POST requests
-                if (pattern.equals("/api/organizations") && !"POST".equals(method)) {
+                // For /api/organizations/register, only allow POST requests
+                if (pattern.equals("/api/organizations/register") && !"POST".equals(method)) {
                     continue;
                 }
                 // For exists endpoints, only allow GET requests
