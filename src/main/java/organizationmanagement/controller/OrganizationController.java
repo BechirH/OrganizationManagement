@@ -52,7 +52,9 @@ public class OrganizationController {
 
     @GetMapping("/{id}/exists")
     public ResponseEntity< Boolean> exists(@PathVariable UUID id) {
+        System.out.println("Organization Controller - Checking if organization exists: " + id);
         boolean exists = organizationService.exists(id);
+        System.out.println("Organization Controller - Organization exists: " + exists);
         return ResponseEntity.ok(exists);
     }
 

@@ -37,6 +37,7 @@ public class SecurityConfig {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html"
+
     };
 
     public SecurityConfig(GatewayAuthenticationFilter gatewayAuthenticationFilter) {
@@ -54,6 +55,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/organizations/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/organizations/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/departments/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/teams/*/exists").permitAll()
                         .anyRequest().authenticated()
                 )
 
