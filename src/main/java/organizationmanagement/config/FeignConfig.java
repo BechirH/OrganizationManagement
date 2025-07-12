@@ -37,6 +37,35 @@ public class FeignConfig {
                     }
                 }
                 
+                // Explicitly forward key user context headers
+                String username = request.getHeader("X-Username");
+                String userId = request.getHeader("X-User-Id");
+                String organizationId = request.getHeader("X-Organization-Id");
+                String authorities = request.getHeader("X-Authorities");
+                String userAuthorities = request.getHeader("X-User-Authorities");
+                
+                if (username != null) {
+                    requestTemplate.header("X-Username", username);
+                    requestTemplate.header("X-User-Name", username);
+                    System.out.println("Organization FeignConfig - Explicitly forwarding X-Username: " + username);
+                }
+                if (userId != null) {
+                    requestTemplate.header("X-User-Id", userId);
+                    System.out.println("Organization FeignConfig - Explicitly forwarding X-User-Id: " + userId);
+                }
+                if (organizationId != null) {
+                    requestTemplate.header("X-Organization-Id", organizationId);
+                    System.out.println("Organization FeignConfig - Explicitly forwarding X-Organization-Id: " + organizationId);
+                }
+                if (authorities != null) {
+                    requestTemplate.header("X-Authorities", authorities);
+                    System.out.println("Organization FeignConfig - Explicitly forwarding X-Authorities: " + authorities);
+                }
+                if (userAuthorities != null) {
+                    requestTemplate.header("X-User-Authorities", userAuthorities);
+                    System.out.println("Organization FeignConfig - Explicitly forwarding X-User-Authorities: " + userAuthorities);
+                }
+                
                 // Debug: Print all available headers
                 System.out.println("Organization FeignConfig - All available headers:");
                 Enumeration<String> allHeaders = request.getHeaderNames();
