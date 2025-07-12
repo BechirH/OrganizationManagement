@@ -37,6 +37,15 @@ public class FeignConfig {
                     }
                 }
                 
+                // Debug: Print all available headers
+                System.out.println("Organization FeignConfig - All available headers:");
+                Enumeration<String> allHeaders = request.getHeaderNames();
+                while (allHeaders.hasMoreElements()) {
+                    String headerName = allHeaders.nextElement();
+                    String headerValue = request.getHeader(headerName);
+                    System.out.println("  " + headerName + ": " + headerValue);
+                }
+                
                 // Always set X-Authenticated header for service-to-service calls
                 requestTemplate.header("X-Authenticated", "true");
                 System.out.println("Organization FeignConfig - Setting X-Authenticated = true");
