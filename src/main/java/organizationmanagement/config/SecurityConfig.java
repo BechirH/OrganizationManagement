@@ -14,7 +14,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.http.HttpMethod;
 
-import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -47,9 +47,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // Enable security context propagation for async requests and Feign clients
-        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
-
         http
                 // Disable CSRF for stateless API
                 .csrf(csrf -> csrf.disable())
@@ -65,11 +62,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/departments/user/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/user/**").permitAll()
                         .anyRequest().authenticated()
-                )
-
-                // Configure security context propagation
-                .securityContext(securityContext -> securityContext
-                        .requireExplicitSave(false)  // Required for proper context propagation
                 )
 
                 // Stateless session management
