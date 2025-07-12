@@ -14,27 +14,23 @@ import java.util.UUID;
 @Component
 public class OrganizationContextUtil {
 
-    private final JwtUtil jwtUtil;
-
-    public OrganizationContextUtil(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
-
     /**
-     * Extract organization ID from the current JWT token
+     * Extract organization ID from the current request context (set by Gateway)
      */
     public UUID getCurrentOrganizationId() {
-        String token = extractTokenFromRequest();
-        if (token == null) {
-            throw new SecurityException("No authentication token found");
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes == null) {
+            throw new SecurityException("No request context found");
         }
 
-        UUID organizationId = jwtUtil.extractOrganizationId(token);
-        if (organizationId == null) {
-            throw new SecurityException("No organization context found in token");
+        HttpServletRequest request = attributes.getRequest();
+        Object organizationIdObj = request.getAttribute("organizationId");
+        
+        if (organizationIdObj == null) {
+            throw new SecurityException("No organization context found in request");
         }
 
-        return organizationId;
+        return (UUID) organizationIdObj;
     }
 
     /**
@@ -79,24 +75,7 @@ public class OrganizationContextUtil {
         return authentication != null ? authentication.getAuthorities() : null;
     }
 
-    /**
-     * Extract JWT token from the current HTTP request
-     */
-    private String extractTokenFromRequest() {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes == null) {
-            return null;
-        }
 
-        HttpServletRequest request = attributes.getRequest();
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-
-        return null;
-    }
 
     /**
      * Get current organization ID, returning null if not available (for optional scenarios)

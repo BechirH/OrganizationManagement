@@ -18,7 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import organizationmanagement.security.JwtRequestFilter;
+import organizationmanagement.security.GatewayAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -29,7 +29,7 @@ import organizationmanagement.security.JwtRequestFilter;
 )
 public class SecurityConfig {
 
-    private final JwtRequestFilter jwtRequestFilter;
+    private final GatewayAuthenticationFilter gatewayAuthenticationFilter;
 
     // Public endpoints that don't require authentication
     private static final String[] PUBLIC_ENDPOINTS = {
@@ -39,22 +39,10 @@ public class SecurityConfig {
             "/swagger-ui.html"
     };
 
-    // Endpoints that should be ignored by CSRF protection
-    private static final String[] CSRF_IGNORED_ENDPOINTS = {
-            "/actuator/health",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/api/organizations", // POST
-            "/api/organizations/*/exists", // GET
-            "/api/departments/*/exists", // GET
-            "/api/teams/*/exists", // GET
-            "/api/departments/user/**", // GET
-            "/api/teams/user/**" // GET
-    };
 
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
-        this.jwtRequestFilter = jwtRequestFilter;
+
+    public SecurityConfig(GatewayAuthenticationFilter gatewayAuthenticationFilter) {
+        this.gatewayAuthenticationFilter = gatewayAuthenticationFilter;
     }
 
     @Bean
@@ -63,11 +51,8 @@ public class SecurityConfig {
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
 
         http
-                // Enable CSRF for cookie-based authentication
-                .csrf(csrf -> csrf
-                    .ignoringRequestMatchers(CSRF_IGNORED_ENDPOINTS) // Allow public and whitelisted endpoints without CSRF
-                    .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
-                )
+                // Disable CSRF for stateless API
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // Configure authorization
@@ -94,18 +79,18 @@ public class SecurityConfig {
 
                 // Exception handling
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(jwtAuthenticationEntryPoint())
-                        .accessDeniedHandler(jwtAccessDeniedHandler())
+                        .authenticationEntryPoint(authenticationEntryPoint())
+                        .accessDeniedHandler(accessDeniedHandler())
                 )
 
-                // Add JWT filter
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                // Add Gateway authentication filter
+                .addFilterBefore(gatewayAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public AuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+    public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, authException) -> {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -117,7 +102,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AccessDeniedHandler jwtAccessDeniedHandler() {
+    public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
