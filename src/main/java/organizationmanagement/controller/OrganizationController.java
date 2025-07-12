@@ -45,6 +45,8 @@ public class OrganizationController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public Organization create(@RequestBody Organization organization) {
+        System.out.println("Organization Service - Received organization: " + organization);
+        System.out.println("Organization Service - Organization name: " + (organization != null ? organization.getName() : "[null]"));
         return organizationService.create(organization);
     }
 
