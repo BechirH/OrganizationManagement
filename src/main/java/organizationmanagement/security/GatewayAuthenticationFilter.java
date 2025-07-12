@@ -41,14 +41,8 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String requestPath = request.getRequestURI();
-        String method = request.getMethod();
-        System.out.println("Organization Service - Request: " + method + " " + requestPath);
-        System.out.println("Organization Service - Is public endpoint: " + isPublicEndpoint(request));
-
         // Skip authentication for public endpoints
         if (isPublicEndpoint(request)) {
-            System.out.println("Organization Service - Allowing public endpoint: " + requestPath);
             filterChain.doFilter(request, response);
             return;
         }

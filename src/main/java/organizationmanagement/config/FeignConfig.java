@@ -15,9 +15,12 @@ public class FeignConfig {
     @Bean
     public RequestInterceptor requestInterceptor() {
         return requestTemplate -> {
+            System.out.println("Organization FeignConfig - Intercepting request to: " + requestTemplate.url());
+            
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
+                System.out.println("Organization FeignConfig - Request URI: " + request.getRequestURI());
                 
                 // Forward authentication headers from Gateway
                 Enumeration<String> headerNames = request.getHeaderNames();
@@ -30,8 +33,15 @@ public class FeignConfig {
                         headerName.equals("Authorization") || 
                         headerName.equals("Cookie")) {
                         requestTemplate.header(headerName, headerValue);
+                        System.out.println("Organization FeignConfig - Forwarding header: " + headerName + " = " + headerValue);
                     }
                 }
+                
+                // Always set X-Authenticated header for service-to-service calls
+                requestTemplate.header("X-Authenticated", "true");
+                System.out.println("Organization FeignConfig - Setting X-Authenticated = true");
+            } else {
+                System.out.println("Organization FeignConfig - No request attributes found");
             }
         };
     }

@@ -36,8 +36,12 @@ public class SecurityConfig {
             "/actuator/health",
             "/v3/api-docs/**",
             "/swagger-ui/**",
-            "/swagger-ui.html"
-
+            "/swagger-ui.html",
+            "/api/organizations/*/exists",
+            "/api/departments/*/exists",
+            "/api/teams/*/exists",
+            "/api/departments/user/**",
+            "/api/teams/user/**"
     };
 
     public SecurityConfig(GatewayAuthenticationFilter gatewayAuthenticationFilter) {
@@ -58,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/organizations/*/exists").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/departments/*/exists").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/teams/*/exists").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/departments/user/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/teams/user/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
