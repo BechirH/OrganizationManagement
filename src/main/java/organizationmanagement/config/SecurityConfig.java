@@ -63,11 +63,7 @@ public class SecurityConfig {
         SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
 
         http
-                // Enable CSRF for cookie-based authentication
-                .csrf(csrf -> csrf
-                    .ignoringRequestMatchers(CSRF_IGNORED_ENDPOINTS) // Allow public and whitelisted endpoints without CSRF
-                    .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
-                )
+                .csrf(csrf -> csrf.disable()) // <--- Désactive CSRF partout
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // Configure authorization
