@@ -10,11 +10,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import organizationmanagement.dto.UserDTO;
+import organizationmanagement.client.UserServiceClient;
 
 @Service
 @RequiredArgsConstructor
 public class OrganizationServiceImpl implements OrganizationService {
     private final OrganizationRepository organizationRepository;
+    private final UserServiceClient userServiceClient;
     private static final int NAME_MIN_LENGTH = 2;
     private static final int NAME_MAX_LENGTH = 100;
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s\\-']+$");
@@ -56,6 +59,11 @@ public class OrganizationServiceImpl implements OrganizationService {
             throw new ResourceNotFoundException("Cannot delete. Organization not found with id: " + id);
         }
         organizationRepository.deleteById(id);
+    }
+
+    @Override
+    public List<UserDTO> getUsersByOrganizationId(UUID organizationId) {
+        return userServiceClient.getUsersByOrganizationId(organizationId).getBody();
     }
 
     private void validateOrganization(Organization org) {

@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import organizationmanagement.dto.DepartmentDTO;
 import organizationmanagement.dto.TeamCreateDTO;
 import organizationmanagement.dto.TeamDTO;
+import organizationmanagement.dto.UserDTO;
 import organizationmanagement.model.Department;
 import organizationmanagement.model.Team;
 import organizationmanagement.service.DepartmentService;
@@ -192,6 +193,12 @@ public class TeamController {
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
+
+    @GetMapping("/{teamId}/users")
+    public ResponseEntity<List<UserDTO>> getUsersByTeamId(@PathVariable UUID teamId) {
+        List<UserDTO> users = teamService.getUsersByTeamId(teamId);
+        return ResponseEntity.ok(users);
     }
 
     // Mapping methods

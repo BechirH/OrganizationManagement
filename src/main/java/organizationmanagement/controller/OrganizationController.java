@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import organizationmanagement.dto.DepartmentDTO;
 import organizationmanagement.dto.OrganizationDTO;
 import organizationmanagement.dto.TeamDTO;
+import organizationmanagement.dto.UserDTO;
 import organizationmanagement.exception.ResourceNotFoundException;
 import organizationmanagement.model.Organization;
 import organizationmanagement.service.DepartmentService;
@@ -104,6 +105,12 @@ public class OrganizationController {
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{organizationId}/users")
+    public ResponseEntity<List<UserDTO>> getUsersByOrganizationId(@PathVariable UUID organizationId) {
+        List<UserDTO> users = organizationService.getUsersByOrganizationId(organizationId);
+        return ResponseEntity.ok(users);
     }
 
     // ===== USER ASSIGNMENT ENDPOINTS =====

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import organizationmanagement.dto.UserDTO;
 
 @RestController
 @RequestMapping("/api/departments")
@@ -195,5 +196,11 @@ public class DepartmentController {
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
+
+    @GetMapping("/{departmentId}/users")
+    public ResponseEntity<List<UserDTO>> getUsersByDepartmentId(@PathVariable UUID departmentId) {
+        List<UserDTO> users = service.getUsersByDepartmentId(departmentId);
+        return ResponseEntity.ok(users);
     }
 }

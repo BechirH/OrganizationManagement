@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 import organizationmanagement.service.TeamService;
+import organizationmanagement.dto.UserDTO;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -182,5 +184,19 @@ public class TeamServiceImpl implements TeamService {
             .filter(team -> team.getUserIds() != null && team.getUserIds().contains(userId))
             .findFirst()
             .orElseThrow(() -> new ResourceNotFoundException("Team not found for userId: " + userId));
+    }
+
+    @Override
+    public List<UserDTO> getUsersByTeamId(UUID teamId) {
+        Team team = teamRepository.findById(teamId)
+            .orElseThrow(() -> new ResourceNotFoundException("Team not found with id: " + teamId));
+        if (team.getUserIds() == null || team.getUserIds().isEmpty()) {
+            return List.of();
+        }
+        String idsParam = team.getUserIds().stream()
+            .map(UUID::toString)
+            .collect(Collectors.joining(","));
+        ResponseEntity<List<UserDTO>> response = userServiceClient.getUsersBulk(idsParam);
+        return response.getBody() != null ? response.getBody() : List.of();
     }
 } 
