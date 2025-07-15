@@ -7,7 +7,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient(name = "user-service", url = "${user-service.url}")
+@FeignClient(
+    name = "user-service", 
+    url = "${user-service.url}",
+    configuration = organizationmanagement.config.FeignConfig.class
+)
 public interface UserServiceClient {
 
     @GetMapping("/api/users/{userId}/exists")

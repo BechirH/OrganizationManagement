@@ -10,18 +10,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.util.AntPathMatcher;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import organizationmanagement.config.JwtTokenUtil;
 
 @Component
-public class JwtRequestFilter extends OncePerRequestFilter {
-    private final JwtTokenUtil jwtTokenUtil;
+public class GatewayAuthenticationFilter extends OncePerRequestFilter {
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     // Public endpoints that don't require authentication
@@ -30,17 +27,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/api/organizations", // for POST requests
+            "/api/organizations/register", // for POST requests
             "/api/organizations/*/exists", // for GET requests
             "/api/departments/*/exists", // for GET requests
             "/api/teams/*/exists", // for GET requests
-            "/api/departments/user/**", // for GET requests - THIS WAS MISSING
-            "/api/teams/user/**" // for GET requests - THIS WAS MISSING
+            "/api/departments/user/**", // for GET requests
+            "/api/teams/user/**" // for GET requests
     };
-
-    public JwtRequestFilter(JwtTokenUtil jwtTokenUtil) {
-        this.jwtTokenUtil = jwtTokenUtil;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -48,67 +41,66 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Skip JWT validation for public endpoints
+        // Skip authentication for public endpoints
         if (isPublicEndpoint(request)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String token = null;
-        final String authorizationHeader = request.getHeader("Authorization");
-        
-        // First try to get token from Authorization header (for backward compatibility)
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            token = authorizationHeader.substring(7);
-        } else if (request.getCookies() != null) {
-            // Extract token from cookies
-            for (Cookie cookie : request.getCookies()) {
-                if ("access_token".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                    break;
-                }
-            }
+        // Check if request is authenticated by gateway
+        String authenticated = request.getHeader("X-Authenticated");
+        if (!"true".equals(authenticated)) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Request not authenticated by gateway");
+            return;
         }
 
-        if (token == null) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid authentication token");
+        // Extract user context from Gateway headers
+        String username = request.getHeader("X-User-Name");
+        String organizationIdStr = request.getHeader("X-Organization-Id");
+        String authoritiesStr = request.getHeader("X-User-Authorities");
+
+        if (username == null) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing user context from Gateway");
             return;
         }
 
         try {
-            if (!jwtTokenUtil.isTokenValid(token)) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
-                return;
+            // Parse organization ID if present
+            UUID organizationId = null;
+            if (organizationIdStr != null && !organizationIdStr.isEmpty()) {
+                organizationId = UUID.fromString(organizationIdStr);
             }
 
-            final String username = jwtTokenUtil.extractUsername(token);
-            final UUID organizationId = jwtTokenUtil.extractOrganizationId(token);
-
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                List<String> authorities = jwtTokenUtil.extractAuthorities(token);
-                List<GrantedAuthority> grantedAuthorities = authorities.stream()
+            // Parse authorities
+            List<GrantedAuthority> grantedAuthorities = List.of();
+            if (authoritiesStr != null && !authoritiesStr.isEmpty()) {
+                grantedAuthorities = List.of(authoritiesStr.split(","))
+                        .stream()
+                        .map(String::trim)
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                username,
-                                null,
-                                grantedAuthorities);
-
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request));
-
-                if (organizationId != null) {
-                    request.setAttribute("organizationId", organizationId);
-                }
-                request.setAttribute("username", username);
-
-                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+
+            // Create authentication token
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            username,
+                            null,
+                            grantedAuthorities);
+
+            authentication.setDetails(
+                    new WebAuthenticationDetailsSource().buildDetails(request));
+
+            // Set request attributes for downstream use
+            if (organizationId != null) {
+                request.setAttribute("organizationId", organizationId);
+            }
+            request.setAttribute("username", username);
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
             SecurityContextHolder.clearContext();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid user context from Gateway: " + e.getMessage());
             return;
         }
 
@@ -121,8 +113,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         for (String pattern : PUBLIC_ENDPOINTS) {
             if (pathMatcher.match(pattern, requestPath)) {
-                // For /api/organizations, only allow POST requests
-                if (pattern.equals("/api/organizations") && !"POST".equals(method)) {
+                // For /api/organizations/register, only allow POST requests
+                if (pattern.equals("/api/organizations/register") && !"POST".equals(method)) {
                     continue;
                 }
                 // For exists endpoints, only allow GET requests
@@ -142,4 +134,4 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         return false;
     }
-}
+} 

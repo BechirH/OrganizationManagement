@@ -128,7 +128,7 @@ public class DepartmentController {
             }
 
             existing.setName(deptDto.getName());
-            // Keep the same organization for non-root users
+
             Department updated = service.update(existing);
             updatedDepartment = DepartmentMapper.toDTO(updated);
         }
