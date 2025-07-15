@@ -58,13 +58,12 @@ public class TeamController {
         Team teamEntity = convertToEntity(teamDto);
 
         if (organizationContextUtil.isRootAdmin()) {
-            // Root admin can create teams in any organization
-            // The organization context should be derived from the department
+
             Team saved = teamService.createUnderDepartment(teamDto.getDepartmentId(), teamEntity);
             createdTeam = TeamMapper.toDTO(saved);
         } else {
             UUID organizationId = organizationContextUtil.getCurrentOrganizationId();
-            // Verify department belongs to the current organization
+
             Team saved = teamService.createUnderDepartmentInOrganization(
                     teamDto.getDepartmentId(), teamEntity, organizationId);
             createdTeam = TeamMapper.toDTO(saved);
@@ -126,7 +125,7 @@ public class TeamController {
         return ResponseEntity.ok(updatedTeam);
     }
 
-    // Additional endpoint to get teams by department within organization scope
+
     @GetMapping("/department/{departmentId}")
     @PreAuthorize("hasAnyAuthority('TEAM_READ','SYS_ADMIN_ROOT')")
     public ResponseEntity<List<TeamDTO>> getTeamsByDepartment(@PathVariable UUID departmentId) {
@@ -199,7 +198,6 @@ public class TeamController {
     private Team convertToEntity(TeamCreateDTO dto) {
         Team team = new Team();
         team.setName(dto.getName());
-        // Note: Department will be set in the service layer to ensure organization scope
         return team;
     }
 }

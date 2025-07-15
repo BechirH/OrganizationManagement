@@ -15,9 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.http.HttpMethod;
 
 
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import organizationmanagement.security.GatewayAuthenticationFilter;
 
 @Configuration
@@ -31,7 +29,7 @@ public class SecurityConfig {
 
     private final GatewayAuthenticationFilter gatewayAuthenticationFilter;
 
-    // Public endpoints that don't require authentication
+
     private static final String[] PUBLIC_ENDPOINTS = {
             "/actuator/health",
             "/v3/api-docs/**",
@@ -51,11 +49,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF for stateless API
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                // Configure authorization
+                .csrf(csrf -> csrf.disable())
+
+
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/organizations/register").permitAll()
@@ -67,18 +64,18 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                // Stateless session management
+
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // Exception handling
+
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint())
                         .accessDeniedHandler(accessDeniedHandler())
                 )
 
-                // Add Gateway authentication filter
+
                 .addFilterBefore(gatewayAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -108,17 +105,5 @@ public class SecurityConfig {
         };
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        // TODO: Restrict allowed origins for production
-        configuration.setAllowedOriginPatterns(java.util.List.of("http://localhost:3000")); // Example: allow only frontend dev server
-        configuration.setAllowedMethods(java.util.Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(java.util.Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(java.util.Arrays.asList("Authorization", "Content-Type"));
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+
 }
