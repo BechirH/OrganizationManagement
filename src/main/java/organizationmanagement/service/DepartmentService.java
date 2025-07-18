@@ -2,6 +2,7 @@ package organizationmanagement.service;
 
 import organizationmanagement.model.Department;
 import organizationmanagement.repository.DepartmentRepository;
+import organizationmanagement.dto.UserDTO;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,4 +22,5 @@ public interface DepartmentService {
     void removeSurveyFromDepartmentInOrganization(UUID departmentId, UUID surveyId, UUID organizationId);
     DepartmentRepository getDepartmentRepository();
     Department findByUserId(UUID userId);
+    List<UserDTO> getUsersForDepartment(UUID departmentId, UUID organizationId);
 }

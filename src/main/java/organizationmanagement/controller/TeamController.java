@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import organizationmanagement.mapper.TeamMapper;
 import organizationmanagement.exception.ResourceNotFoundException;
+import organizationmanagement.dto.UserDTO;
 
 import java.util.List;
 import java.util.UUID;
@@ -191,6 +192,16 @@ public class TeamController {
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
+
+    @GetMapping("/{teamId}/users")
+    @PreAuthorize("hasAnyAuthority('TEAM_READ','SYS_ADMIN_ROOT')")
+    public ResponseEntity<List<UserDTO>> getUsersByTeam(@PathVariable UUID teamId) {
+        UUID orgId = organizationContextUtil.isRootAdmin() ? 
+            teamService.getById(teamId).getDepartment().getOrganization().getId() : 
+            organizationContextUtil.getCurrentOrganizationId();
+        List<UserDTO> users = teamService.getUsersForTeam(teamId, orgId);
+        return ResponseEntity.ok(users);
     }
 
     // Mapping methods

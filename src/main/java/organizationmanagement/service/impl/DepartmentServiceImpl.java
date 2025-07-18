@@ -4,6 +4,7 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import organizationmanagement.client.SurveyServiceClient;
 import organizationmanagement.client.UserServiceClient;
+import organizationmanagement.dto.UserDTO;
 import organizationmanagement.exception.BadRequestException;
 import organizationmanagement.exception.ResourceNotFoundException;
 import organizationmanagement.exception.ServiceUnavailableException;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -200,5 +202,16 @@ public class DepartmentServiceImpl implements DepartmentService {
                 .filter(dept -> dept.getUserIds() != null && dept.getUserIds().contains(userId))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found for userId: " + userId));
+    }
+
+    @Override
+    public List<UserDTO> getUsersForDepartment(UUID departmentId, UUID organizationId) {
+        Department dept = departmentRepository.findByIdAndOrganizationId(departmentId, organizationId)
+            .orElseThrow(() -> new ResourceNotFoundException("Department not found with id " + departmentId + " in organization " + organizationId));
+        if (dept.getUserIds() == null || dept.getUserIds().isEmpty()) {
+            return new ArrayList<>();
+        }
+        ResponseEntity<List<UserDTO>> response = userServiceClient.getUsersByIds(new ArrayList<>(dept.getUserIds()));
+        return response.getBody() != null ? response.getBody() : new ArrayList<>();
     }
 } 
