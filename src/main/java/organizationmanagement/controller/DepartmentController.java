@@ -3,6 +3,7 @@ package organizationmanagement.controller;
 import organizationmanagement.dto.DepartmentCreateDTO;
 import organizationmanagement.dto.DepartmentDTO;
 import organizationmanagement.dto.OrganizationDTO;
+import organizationmanagement.dto.UserDTO;
 import organizationmanagement.exception.BadRequestException;
 import organizationmanagement.exception.ResourceNotFoundException;
 import organizationmanagement.model.Department;
@@ -195,5 +196,15 @@ public class DepartmentController {
         } catch (ResourceNotFoundException ex) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
+
+    @GetMapping("/{departmentId}/users")
+    @PreAuthorize("hasAnyAuthority('DEPARTMENT_READ','SYS_ADMIN_ROOT')")
+    public ResponseEntity<List<UserDTO>> getUsersByDepartment(@PathVariable UUID departmentId) {
+        UUID orgId = organizationContextUtil.isRootAdmin() ? 
+            service.getById(departmentId).getOrganization().getId() : 
+            organizationContextUtil.getCurrentOrganizationId();
+        List<UserDTO> users = service.getUsersForDepartment(departmentId, orgId);
+        return ResponseEntity.ok(users);
     }
 }

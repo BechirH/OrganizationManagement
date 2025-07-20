@@ -1,6 +1,7 @@
 package organizationmanagement.service;
 
 import organizationmanagement.model.Team;
+import organizationmanagement.dto.UserDTO;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,4 +24,5 @@ public interface TeamService {
     void removeSurveyFromTeamInOrganization(UUID teamId, UUID surveyId, UUID organizationId);
     boolean existsById(UUID id);
     Team findByUserId(UUID userId);
+    List<UserDTO> getUsersForTeam(UUID teamId, UUID organizationId);
 }
