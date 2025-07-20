@@ -4,6 +4,7 @@ import organizationmanagement.dto.DepartmentDTO;
 import organizationmanagement.dto.TeamDTO;
 import organizationmanagement.model.Department;
 import organizationmanagement.model.Team;
+import organizationmanagement.mapper.DepartmentMapper;
 
 public class TeamMapper {
     public static TeamDTO toDTO(Team team) {
@@ -13,10 +14,7 @@ public class TeamMapper {
         dto.setName(team.getName());
         Department dept = team.getDepartment();
         if (dept != null) {
-            DepartmentDTO deptDto = new DepartmentDTO();
-            deptDto.setId(dept.getId());
-            deptDto.setName(dept.getName());
-            dto.setDepartment(deptDto);
+            dto.setDepartment(DepartmentMapper.toDTO(dept)); // Use the full mapper!
         }
         return dto;
     }
