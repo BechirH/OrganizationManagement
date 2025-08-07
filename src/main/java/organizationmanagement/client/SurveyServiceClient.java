@@ -13,7 +13,7 @@ import java.util.UUID;
         configuration = organizationmanagement.config.FeignConfig.class
 )
 public interface SurveyServiceClient {
-    @GetMapping("/{surveyId}/exists")
+    @GetMapping("/api/surveys/{surveyId}/exists")
     ResponseEntity<Boolean> surveyExists(@PathVariable("surveyId") UUID surveyId);
 }
 
