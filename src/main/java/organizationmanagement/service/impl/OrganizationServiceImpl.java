@@ -18,7 +18,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     private static final int NAME_MIN_LENGTH = 2;
     private static final int NAME_MAX_LENGTH = 100;
     private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s\\-']+$");
-    // ... (all method implementations from the old OrganizationService)
+
 
     @Override
     public List<Organization> getAll() { return organizationRepository.findAll(); }
